@@ -24,10 +24,14 @@ class AnimalBaselineNet(nn.Module):
         # TODO: Define layers of model architecture
         # TODO-BLOCK-BEGIN
         self.conv1 = nn.Conv2d(3, 6, 3, stride=2, padding=1)
+        self.batch = nn.BatchNorm2d(6)
         self.conv2 = nn.Conv2d(6, 12, 3, stride=2, padding=1)
+        self.batch1 = nn.BatchNorm2d(12)
         self.conv3 = nn.Conv2d(12, 24, 3, stride=2, padding=1)
+        self.batch2 = nn.BatchNorm2d(12)
 
         self.fc = nn.Linear(8*8*24, 128)
+        self.batch3 = nn.BatchNorm2d(128)
         self.cls = nn.Linear(128, 16)
 
         # TODO-BLOCK-END
@@ -37,12 +41,12 @@ class AnimalBaselineNet(nn.Module):
 
         # TODO: Define forward pass
         # TODO-BLOCK-BEGIN
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
+        x = F.relu(self.batch(self.conv1(x)))
+        x = F.relu(self.batch1(self.conv2(x)))
+        x = F.relu(self.batch2(self.conv3(x)))
 
         x = x.view(-1, 1536)
-        x = F.relu(self.fc(x))
+        x = F.relu(self.batch2(self.fc(x)))
         x = self.cls(x)
 
         # TODO-BLOCK-END
@@ -319,9 +323,11 @@ class AnimalStudentNet(nn.Module):
         # TODO: Define layers of model architecture
         # TODO-BLOCK-BEGIN
         self.conv1 = nn.Conv2d(3, 6, 3, stride=2, padding=1)
-        self.batch = nn.BatchNorm2d(6)
+        self.batch1 = nn.BatchNorm2d(6)
         self.conv2 = nn.Conv2d(6, 12, 3, stride=2, padding=1)
+        self.batch2 = nn.BatchNorm2d(12)
         self.conv3 = nn.Conv2d(12, 24, 3, stride=2, padding=1)
+        self.batch3 = nn.BatchNorm2d(24)
 
         self.fc = nn.Linear(8*8*24, 128)
         self.cls = nn.Linear(128, 16)
@@ -333,9 +339,9 @@ class AnimalStudentNet(nn.Module):
 
         # TODO: Define forward pass
         # TODO-BLOCK-BEGIN
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
+        x = F.relu(self.batch1(self.conv1(x)))
+        x = F.relu(self.batch2(self.conv2(x)))
+        x = F.relu(self.batch3(self.conv3(x)))
 
         x = x.view(-1, 1536)
         x = F.relu(self.fc(x))
