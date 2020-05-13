@@ -264,7 +264,9 @@ class HorizontalFlip(object):
         # TODO: Flip image
         # TODO-BLOCK-BEGIN
         if random.random() <= self.p:
-            image = cv2.flip(image, 1)
+            image[0] = cv2.flip(image[0], 1)
+            image[1] = cv2.flip(image[1], 1)
+            image[2] = cv2.flip(image[2], 1)
 
         # TODO-BLOCK-END
 
@@ -294,9 +296,9 @@ def get_student_settings(net):
     transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.ToTensor(),
-        Shift(max_shift=10),
-        Contrast(min_contrast=0.4, max_contrast=0.9),
-        Rotate(max_angle=30),
+        Shift(max_shift=6),
+        Contrast(min_contrast=0.3, max_contrast=0.9),
+        Rotate(max_angle=11),
         HorizontalFlip(p=0.5),
         transforms.Normalize(dataset_means, dataset_stds)
     ])
@@ -309,7 +311,7 @@ def get_student_settings(net):
 
     # TODO: epochs, criterion and optimizer
     # TODO-BLOCK-BEGIN
-    epochs = 70
+    epochs = 60
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=0.005)
     # TODO-BLOCK-END
@@ -322,14 +324,20 @@ class AnimalStudentNet(nn.Module):
         super(AnimalStudentNet, self).__init__()
         # TODO: Define layers of model architecture
         # TODO-BLOCK-BEGIN
-        self.conv1 = nn.Conv2d(3, 6, 3, stride=2, padding=1)
-        self.batch1 = nn.BatchNorm2d(6)
-        self.conv2 = nn.Conv2d(6, 12, 3, stride=2, padding=1)
-        self.batch2 = nn.BatchNorm2d(12)
-        self.conv3 = nn.Conv2d(12, 24, 3, stride=2, padding=1)
-        self.batch3 = nn.BatchNorm2d(24)
+        self.conv1 = nn.Conv2d(3, 9, 3, stride=2, padding=1)
+        self.batch1 = nn.BatchNorm2d(9)
+        self.conv2 = nn.Conv2d(9, 27, 3, stride=2, padding=1)
+        self.batch2 = nn.BatchNorm2d(27)
+        self.conv3 = nn.Conv2d(27, 81, 3, stride=2, padding=1)
+        self.batch3 = nn.BatchNorm2d(81)
+        self.conv4 = nn.Conv2d(81, 243, 3, stride=2, padding=1)
+        self.batch4 = nn.BatchNorm2d(243)
+        self.conv5 = nn.Conv2d(243, 729, 3, stride=2, padding=1)
+        self.batch5 = nn.BatchNorm2d(729)
 
-        self.fc = nn.Linear(8*8*24, 128)
+        self.fc = nn.Linear(729, 500)
+        self.fc2 = nn.Linear(500, 128)
+        self.drop = nn.Dropout(p=0.3)
         self.cls = nn.Linear(128, 16)
 
         # TODO-BLOCK-END
@@ -342,9 +350,16 @@ class AnimalStudentNet(nn.Module):
         x = F.relu(self.batch1(self.conv1(x)))
         x = F.relu(self.batch2(self.conv2(x)))
         x = F.relu(self.batch3(self.conv3(x)))
+        x = F.relu(self.batch4(self.conv4(x)))
+        x = F.relu(self.batch5(self.conv5(x)))
 
-        x = x.view(-1, 1536)
+        x = F.avg_pool2d(x, 2, 2)
+        # print(x.size())
+        x = x.view(-1, 729)
         x = F.relu(self.fc(x))
+        x = self.fc2(x)
+        # x = F.relu(self.fc3(x))
+        x = self.drop(x)
         x = self.cls(x)
 
         # TODO-BLOCK-END
