@@ -332,8 +332,6 @@ class AnimalStudentNet(nn.Module):
         self.batch3 = nn.BatchNorm2d(108)
         self.conv4 = nn.Conv2d(108, 216, 3, stride=2, padding=1)
         self.batch4 = nn.BatchNorm2d(216)
-        # self.conv5 = nn.Conv2d(243, 729, 3, stride=2, padding=1)
-        # self.batch5 = nn.BatchNorm2d(729)
 
         self.fc = nn.Linear(216*4, 128)
         # self.fc2 = nn.Linear(500, 128)
@@ -357,7 +355,6 @@ class AnimalStudentNet(nn.Module):
         x = x.view(-1, 216*4)
         x = F.relu(self.fc(x))
         # x = self.fc2(x)
-        # x = F.relu(self.fc3(x))
         x = self.drop(x)
         x = self.cls(x)
 
@@ -397,7 +394,13 @@ def get_adversarial(img, output, label, net, criterion, epsilon):
 
     # TODO: Define forward pass
     # TODO-BLOCK-BEGIN
+    loss = criterion(output, label)
+    loss.backward()
 
+    G = img.grad
+    alpha = G/torch.abs(G) * epsilon
+
+    perturbed_image = img + alpha
     # TODO-BLOCK-END
 
     return perturbed_image, noise
